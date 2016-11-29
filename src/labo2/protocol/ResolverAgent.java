@@ -35,13 +35,14 @@ public class ResolverAgent {
 	private void listener() {
 		try {
 			byte[] buffer = new byte[512];
+			byte[] ping = Message.serialize(SimpleMessage.ofType(MessageType.SERVICE_PONG));
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 			while (true) {
 				agentSocket.receive(packet);
 				Message message = Message.parse(packet.getData(), packet.getOffset(), packet.getLength());
 				switch (message.type()) {
 					case SERVICE_PING:
-						packet.setData(Message.serialize(SimpleMessage.ofType(MessageType.SERVICE_PONG)));
+						packet.setData(ping);
 						agentSocket.send(packet);
 						packet.setData(buffer);
 						break;

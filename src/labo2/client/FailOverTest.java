@@ -10,6 +10,7 @@ public class FailOverTest extends TestClient {
 	protected String desc() { return "Testing Resolver fail-over"; }
 
 	protected void execute() throws IOException {
+		client.setResolverIndex(0);
 		InetSocketAddress first = client.resolve(Time.SERVICE_ID);
 		log.printf("first = %s\n", first);
 		ctx.stopResolver(0);

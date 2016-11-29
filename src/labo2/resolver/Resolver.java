@@ -1,17 +1,17 @@
 package labo2.resolver;
 
 import labo2.protocol.*;
+import labo2.protocol.MessageType;
 import labo2.utils.Logger;
 import labo2.utils.Task;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import static labo2.protocol.MessageType.LIST_ADD;
-import static labo2.protocol.MessageType.LIST_REMOVE;
-import static labo2.protocol.MessageType.SELF_READY;
+import static labo2.protocol.MessageType.*;
 import static labo2.protocol.Protocol.RESOLVERS;
 
 public class Resolver extends Task<Void> {
@@ -136,6 +136,26 @@ public class Resolver extends Task<Void> {
 		return instance;
 	}
 
+	private int serviceAgentPort(byte service, InetSocketAddress address) {
+		for (ServiceInstance i : services[service]) {
+			if (i.address.equals(address)) {
+				return i.agentPort;
+			}
+		}
+		return -1;
+	}
+
+	private void removeService(byte service, InetSocketAddress address) {
+		Iterator<ServiceInstance> it = services[service].listIterator();
+		while (it.hasNext()) {
+			ServiceInstance instance = it.next();
+			if (instance.address.equals(address)) {
+				it.remove();
+				return;
+			}
+		}
+	}
+
 	private synchronized void receive(DatagramPacket packet) throws IOException {
 		Message message = Message.parse(packet.getData(), packet.getOffset(), packet.getLength());
 		MessageType type = message.type();
@@ -175,6 +195,33 @@ public class Resolver extends Task<Void> {
 					instance != null,
 					instance != null ? instance.address : null
 				), packet);
+				break;
+			}
+
+			case SERVICE_OFFLINE: {
+				ServiceOfflineMessage msg = (ServiceOfflineMessage) message;
+				log.printf("Received service offline notification for service [%d] from %s\n",
+					msg.service, packet.getSocketAddress());
+
+				int agentPort = serviceAgentPort(msg.service, msg.address);
+				if (agentPort < 0) {
+					send(new ServiceThanksMessage(false), packet);
+					break;
+				}
+
+				InetAddress clientAddress = packet.getAddress();
+				int clientPort = packet.getPort();
+
+				new Thread(() -> {
+					try (DatagramSocket socket = new DatagramSocket(null)) {
+						byte[] data = Message.serialize(SimpleMessage.ofType(SERVICE_PING));
+						DatagramPacket p = new DatagramPacket(data, data.length, msg.address.getAddress(), agentPort);
+
+					} catch (IOException e) {
+						e.printStackTrace();
+						System.exit(1);
+					}
+				});
 				break;
 			}
 

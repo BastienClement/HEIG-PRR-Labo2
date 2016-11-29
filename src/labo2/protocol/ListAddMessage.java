@@ -20,14 +20,14 @@ public class ListAddMessage extends Message {
 
 	void serialize(DataOutputStream output) throws IOException {
 		output.writeByte(service);
-		SharedEncoders.serializeSocketAddress(output, address);
+		AdresseEncoder.serialize(output, address);
 		output.writeInt(agentPort);
 	}
 
 	static ListAddMessage deserialize(DataInputStream input) throws IOException {
 		return new ListAddMessage(
 			input.readByte(),
-			SharedEncoders.unserializeSocketAddress(input),
+			AdresseEncoder.unserialize(input),
 			input.readInt()
 		);
 	}

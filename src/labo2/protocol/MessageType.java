@@ -9,6 +9,8 @@ public enum MessageType {
 	SERVICE_REGISTERED(null),
 	SERVICE_REQUEST(ServiceRequestMessage::deserialize),
 	SERVICE_OFFER(ServiceOfferMessage::deserialize),
+	SERVICE_OFFLINE(ServiceOfflineMessage::deserialize),
+	SERVICE_THANKS(ServiceThanksMessage::deserialize),
 	SERVICE_PING(null),
 	SERVICE_PONG(null),
 
@@ -18,7 +20,18 @@ public enum MessageType {
 	LIST_ADD(ListAddMessage::deserialize),
 	LIST_REMOVE(ListRemoveMessage::deserialize),
 
-	// Whatever
+	/**
+	 * This message is an implementation detail and not part of the protocol.
+	 * To ensure list correctness post-synchronization, resolvers need to defer
+	 * handling of message received during the synchronization process to after
+	 * the process is complete. However, we should only handle LIST_ADD and
+	 * LIST_REMOVE messages and drop everything else.
+	 * This message is sent to ourselves once the synchronization is complete
+	 * to mark the ready-state transition inside the incoming datagrams queue.
+	 * It is critical for this message to not be dropped by the kernel due to
+	 * a full receive buffer in the underlying UDP socket or the resolver will
+	 * be stuck in the sync state forever.
+	 */
 	SELF_READY(null);
 
 	/**

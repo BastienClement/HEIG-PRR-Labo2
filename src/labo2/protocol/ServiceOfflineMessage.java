@@ -5,13 +5,13 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public class ListRemoveMessage extends Message {
-	public MessageType type() { return MessageType.LIST_REMOVE; }
+public class ServiceOfflineMessage extends Message {
+	public MessageType type() { return MessageType.SERVICE_OFFLINE; }
 
 	public final byte service;
 	public final InetSocketAddress address;
 
-	public ListRemoveMessage(byte service, InetSocketAddress address) {
+	public ServiceOfflineMessage(byte service, InetSocketAddress address) {
 		this.service = service;
 		this.address = address;
 	}
@@ -21,8 +21,8 @@ public class ListRemoveMessage extends Message {
 		AdresseEncoder.serialize(output, address);
 	}
 
-	static ListRemoveMessage deserialize(DataInputStream input) throws IOException {
-		return new ListRemoveMessage(
+	static ServiceOfflineMessage deserialize(DataInputStream input) throws IOException {
+		return new ServiceOfflineMessage(
 			input.readByte(),
 			AdresseEncoder.unserialize(input)
 		);

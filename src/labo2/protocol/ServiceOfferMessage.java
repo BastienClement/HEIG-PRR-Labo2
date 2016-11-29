@@ -19,14 +19,14 @@ public class ServiceOfferMessage extends Message {
 	void serialize(DataOutputStream output) throws IOException {
 		output.writeBoolean(available);
 		if (available) {
-			SharedEncoders.serializeSocketAddress(output, address);
+			AdresseEncoder.serialize(output, address);
 		}
 	}
 
 	static ServiceOfferMessage deserialize(DataInputStream input) throws IOException {
 		boolean available = input.readBoolean();
 		if (available) {
-			InetSocketAddress address = SharedEncoders.unserializeSocketAddress(input);
+			InetSocketAddress address = AdresseEncoder.unserialize(input);
 			return new ServiceOfferMessage(true, address);
 		} else {
 			return new ServiceOfferMessage(false, null);

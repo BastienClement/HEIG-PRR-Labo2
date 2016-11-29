@@ -25,6 +25,7 @@ public class ResolverRecoveryTest extends TestClient {
 	protected String desc() { return "Testing Resolver recovery"; }
 
 	protected void execute() throws IOException {
+		client.setResolverIndex(0);
 		InetSocketAddress first = client.resolve(Echo.SERVICE_ID);
 		log.printf("first = %s\n", first);
 
