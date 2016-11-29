@@ -16,7 +16,10 @@ public enum MessageType {
 	LIST_SYNC_REQUEST(null),
 	LIST_SYNC_COMMIT(null),
 	LIST_ADD(ListAddMessage::deserialize),
-	LIST_REMOVE(ListRemoveMessage::deserialize);
+	LIST_REMOVE(ListRemoveMessage::deserialize),
+
+	// Whatever
+	SELF_READY(null);
 
 	/**
 	 * The deserializer associated with this message type.

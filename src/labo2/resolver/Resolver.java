@@ -9,6 +9,9 @@ import java.net.*;
 import java.util.LinkedList;
 import java.util.List;
 
+import static labo2.protocol.MessageType.LIST_ADD;
+import static labo2.protocol.MessageType.LIST_REMOVE;
+import static labo2.protocol.MessageType.SELF_READY;
 import static labo2.protocol.Protocol.RESOLVERS;
 
 public class Resolver extends Task<Void> {
@@ -58,16 +61,12 @@ public class Resolver extends Task<Void> {
 	 * @throws IOException
 	 */
 	protected void run() throws IOException {
-		// Initialize instances list from another resolver
-		init();
-
 		// Open resolver socket
 		socket = new DatagramSocket(RESOLVERS[id]);
 		log.printf("Listening on %s:%d\n", socket.getLocalAddress(), socket.getLocalPort());
 
-		// Set the resolver as ready
-		state = State.READY;
-		ready();
+		// Initialize instances list from another resolver
+		init();
 
 		// Main loop
 		byte[] buffer = new byte[512];
@@ -96,6 +95,11 @@ public class Resolver extends Task<Void> {
 		} catch (ResolverClientException ignored) {
 			log.println("No resolver available, starting with an empty directory...");
 			// Ignore ResolverClientException, just start with an empty list
+		} finally {
+			// Send SELF_READY message
+			byte[] data = Message.serialize(SimpleMessage.ofType(SELF_READY));
+			DatagramPacket packet = new DatagramPacket(data, data.length, socket.getLocalAddress(), socket.getLocalPort());
+			socket.send(packet);
 		}
 	}
 
@@ -134,7 +138,20 @@ public class Resolver extends Task<Void> {
 
 	private synchronized void receive(DatagramPacket packet) throws IOException {
 		Message message = Message.parse(packet.getData(), packet.getOffset(), packet.getLength());
-		switch (message.type()) {
+		MessageType type = message.type();
+
+		if (state != State.READY && type != SELF_READY && type != LIST_ADD && type != LIST_REMOVE) {
+			return;
+		}
+
+		switch (type) {
+			case SELF_READY: {
+				// Set the resolver as ready
+				state = State.READY;
+				ready();
+				break;
+			}
+
 			case SERVICE_REGISTER: {
 				ServiceRegisterMessage msg = (ServiceRegisterMessage) message;
 				log.printf("Received service offer for [%d] from %s:%d (agent:%d)\n",

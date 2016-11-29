@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static labo2.protocol.Protocol.RESOLVERS;
 
@@ -23,7 +24,7 @@ public class ResolverClient implements AutoCloseable {
 	private final DatagramSocket socket;
 	private final byte[] buffer = new byte[512];
 	private final DatagramPacket packet = new DatagramPacket(new byte[0], 0);
-	private int resolverIndex = 0;
+	private int resolverIndex = new Random().nextInt(RESOLVERS.length);
 	private Logger logger;
 
 	private ResolverClient(DatagramSocket socket) {
