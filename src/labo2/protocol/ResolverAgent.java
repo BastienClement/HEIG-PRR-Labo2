@@ -50,6 +50,7 @@ public class ResolverAgent {
 			DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 			while (true) {
 				agentSocket.receive(packet);
+				// Retrieve message from data
 				Message message = Message.parse(packet.getData(), packet.getOffset(), packet.getLength());
 				switch (message.type()) {
 					case SERVICE_PING:
