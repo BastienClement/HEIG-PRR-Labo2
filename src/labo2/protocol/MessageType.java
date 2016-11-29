@@ -12,19 +12,67 @@ import java.io.IOException;
  */
 public enum MessageType {
 	// Public Resolver API
+	/**
+	 * Registration request from a service to a resolver.
+	 */
 	SERVICE_REGISTER(ServiceRegisterMessage::deserialize),
+
+	/**
+	 * Acknowledgment that the registration is successfully completed.
+	 */
 	SERVICE_REGISTERED(null),
+
+	/**
+	 * Request of a service from a client to a resolver.
+	 */
 	SERVICE_REQUEST(ServiceRequestMessage::deserialize),
+
+	/**
+	 * Offer of service from a resolver to a client.
+	 */
 	SERVICE_OFFER(ServiceOfferMessage::deserialize),
+
+	/**
+	 * Notification from a client to a resolver to indicates that a
+	 * service is no longer available.
+	 */
 	SERVICE_OFFLINE(ServiceOfflineMessage::deserialize),
+
+	/**
+	 * Response from the resolver to the SERVICE_OFFLINE message.
+	 * Indicates if the client should try again using the same address.
+	 */
 	SERVICE_THANKS(ServiceThanksMessage::deserialize),
+
+	/**
+	 * Requests from a resolver to a serviec agent to test service status.
+	 */
 	SERVICE_PING(null),
+
+	/**
+	 * Response from a service agent if a service is still alive.
+	 */
 	SERVICE_PONG(null),
 
 	// Private Resolver API
+	/**
+	 * Sent by a resolver to another resolver to request list synchronization.
+	 */
 	LIST_SYNC_REQUEST(null),
+
+	/**
+	 * Sent by a resolver after the list synchronization process is complete.
+	 */
 	LIST_SYNC_COMMIT(null),
+
+	/**
+	 * Sent by a resolver to other resolvers when an entry is added to the list.
+	 */
 	LIST_ADD(ListAddMessage::deserialize),
+
+	/**
+	 * Sent by a resolver to other resolvers when an entry is removed from the list.
+	 */
 	LIST_REMOVE(ListRemoveMessage::deserialize),
 
 	/**
