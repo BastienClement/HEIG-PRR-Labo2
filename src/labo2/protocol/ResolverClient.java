@@ -117,7 +117,7 @@ public class ResolverClient implements AutoCloseable {
 	 * @throws IOException
 	 * @throws ResolverClientException if no resolver are available
 	 */
-	public Message request(Message message) throws IOException {
+	public Message request(Message message, int timeout) throws IOException {
 		int origResolverIndex = resolverIndex;
 		byte[] data = Message.serialize(message);
 		do {
@@ -133,7 +133,7 @@ public class ResolverClient implements AutoCloseable {
 			socket.send(packet);
 
 			// Response
-			Message response = receive();
+			Message response = receive(timeout);
 			if (response == null) {
 				if (logger != null) logger.printf("No answer from resolver, skipping...\n");
 				resolverIndex = (resolverIndex + 1) % RESOLVERS.length;
@@ -151,10 +151,10 @@ public class ResolverClient implements AutoCloseable {
 	 * @return the received message, or null in case of a timeout
 	 * @throws IOException
 	 */
-	private Message receive() throws IOException {
+	private Message receive(int timeout) throws IOException {
 		int origSoTimeout = socket.getSoTimeout();
 		try {
-			socket.setSoTimeout(DEFAULT_TIMEOUT);
+			socket.setSoTimeout(timeout);
 			packet.setData(buffer);
 			socket.receive(packet);
 			return Message.parse(packet.getData(), packet.getOffset(), packet.getLength());
@@ -175,26 +175,27 @@ public class ResolverClient implements AutoCloseable {
 	 */
 	public boolean register(byte service, int agentPort) throws IOException {
 		Message request = new ServiceRegisterMessage(service, agentPort);
-		Message response = request(request);
+		Message response = request(request, DEFAULT_TIMEOUT);
 		return response.type() == MessageType.SERVICE_REGISTERED;
 	}
 
 	public InetSocketAddress resolve(byte service) throws IOException {
 		Message request = new ServiceRequestMessage(service);
-		ServiceOfferMessage response = (ServiceOfferMessage) request(request);
+		ServiceOfferMessage response = (ServiceOfferMessage) request(request, DEFAULT_TIMEOUT);
 		return response.address;
 	}
 
-	public void offline(byte service, InetSocketAddress address) throws IOException {
+	public boolean offline(byte service, InetSocketAddress address) throws IOException {
+		return ((ServiceThanksMessage) request(new ServiceOfflineMessage(service, address), DEFAULT_TIMEOUT * 5)).retry;
 	}
 
 	public List<ListAddMessage> sync() throws IOException {
-		Message response = request(SimpleMessage.ofType(MessageType.LIST_SYNC_REQUEST));
+		Message response = request(SimpleMessage.ofType(MessageType.LIST_SYNC_REQUEST), DEFAULT_TIMEOUT);
 		List<ListAddMessage> instances = new ArrayList<>();
 		while (response.type() != MessageType.LIST_SYNC_COMMIT) {
 			if (response.type() == MessageType.LIST_ADD) {
 				instances.add((ListAddMessage) response);
-				response = receive();
+				response = receive(DEFAULT_TIMEOUT);
 				if (response != null) continue;
 			}
 			throw new IllegalStateException();

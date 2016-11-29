@@ -24,7 +24,8 @@ public class TestLauncher {
 		TimeTest::new,
 		RoundRobinTest::new,
 		FailOverTest::new,
-		ResolverRecoveryTest::new
+		ResolverRecoveryTest::new,
+		OfflineEchoTest::new
 	};
 
 	/**

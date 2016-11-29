@@ -205,6 +205,7 @@ public class Resolver extends Task<Void> {
 
 				int agentPort = serviceAgentPort(msg.service, msg.address);
 				if (agentPort < 0) {
+					log.println("Unknown service");
 					send(new ServiceThanksMessage(false), packet);
 					break;
 				}
@@ -213,15 +214,35 @@ public class Resolver extends Task<Void> {
 				int clientPort = packet.getPort();
 
 				new Thread(() -> {
-					try (DatagramSocket socket = new DatagramSocket(null)) {
-						byte[] data = Message.serialize(SimpleMessage.ofType(SERVICE_PING));
-						DatagramPacket p = new DatagramPacket(data, data.length, msg.address.getAddress(), agentPort);
+					try {
+						DatagramSocket socket = new DatagramSocket(null);
+						socket.setSoTimeout(1000);
+						try {
+							// Send ping
+							byte[] data = Message.serialize(SimpleMessage.ofType(SERVICE_PING));
+							DatagramPacket p = new DatagramPacket(data, data.length, msg.address.getAddress(), agentPort);
+							socket.send(p);
 
+							// Receive PONG
+							byte[] buffer = new byte[512];
+							p.setData(buffer);
+							socket.receive(p);
+							if (Message.parse(p.getData(), p.getOffset(), p.getLength()).type() == SERVICE_PONG) {
+								log.println("Got service answer in time");
+								send(new ServiceThanksMessage(true), clientAddress, clientPort);
+								return;
+							}
+						} catch (SocketTimeoutException ignored) {}
+						log.println("Service failed to respond in time");
+						removeService(msg.service, msg.address);
+						broadcast(new ListRemoveMessage(msg.service, msg.address));
+						send(new ServiceThanksMessage(false), clientAddress, clientPort);
+						socket.close();
 					} catch (IOException e) {
 						e.printStackTrace();
 						System.exit(1);
 					}
-				});
+				}).start();
 				break;
 			}
 
@@ -240,6 +261,13 @@ public class Resolver extends Task<Void> {
 				ListAddMessage msg = (ListAddMessage) message;
 				log.printf("Received list add notification from %s\n", packet.getSocketAddress());
 				registerService(new ServiceInstance(msg.service, msg.address, msg.agentPort));
+				break;
+			}
+
+			case LIST_REMOVE: {
+				ListRemoveMessage msg = (ListRemoveMessage) message;
+				log.printf("Received list remove notification from %s\n", packet.getSocketAddress());
+				removeService(msg.service, msg.address);
 				break;
 			}
 
