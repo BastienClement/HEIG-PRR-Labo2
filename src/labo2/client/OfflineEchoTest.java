@@ -5,6 +5,9 @@ import labo2.services.Echo;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+/**
+ * Tests the service offline notification feature.
+ */
 public class OfflineEchoTest extends TestClient {
 	protected String name() { return "off-echo-test"; }
 	protected String desc() { return "Testing offline Echo notification service"; }

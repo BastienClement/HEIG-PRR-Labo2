@@ -5,6 +5,9 @@ import labo2.services.Time;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+/**
+ * Tests the fail-over feature when a resolver is unresponsive.
+ */
 public class FailOverTest extends TestClient {
 	protected String name() { return "fail-over-test"; }
 	protected String desc() { return "Testing Resolver fail-over"; }

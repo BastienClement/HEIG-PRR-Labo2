@@ -7,6 +7,9 @@ import labo2.utils.Task;
 
 import java.io.IOException;
 
+/**
+ * Base class for test suite.
+ */
 public abstract class TestClient extends Task<Boolean> {
 	protected Logger log;
 	protected ResolverClient client;
