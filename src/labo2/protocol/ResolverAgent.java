@@ -40,6 +40,9 @@ public class ResolverAgent {
 		new Thread(this::listener).start();
 	}
 
+	/**
+	 * Listener thread waiting for PINGs message and replying with PONGs.
+	 */
 	private void listener() {
 		try {
 			byte[] buffer = new byte[512];
@@ -73,6 +76,15 @@ public class ResolverAgent {
 		agentSocket.close();
 	}
 
+	/**
+	 * Constructs a new resolver agent using the given socket et service id.
+	 *
+	 * @param socket  the service socket to user
+	 * @param name    the service name, for logging purposes
+	 * @param service the service ID
+	 * @return the new resolver agent
+	 * @throws IOException
+	 */
 	public static ResolverAgent register(DatagramSocket socket, String name, byte service) throws IOException {
 		return new ResolverAgent(socket, name, service);
 	}

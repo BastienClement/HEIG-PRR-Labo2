@@ -179,16 +179,37 @@ public class ResolverClient implements AutoCloseable {
 		return response.type() == MessageType.SERVICE_REGISTERED;
 	}
 
+	/**
+	 * Requests a service address resolution.
+	 *
+	 * @param service the service id to resolve
+	 * @return the service address, or null if unavailable
+	 * @throws IOException
+	 */
 	public InetSocketAddress resolve(byte service) throws IOException {
 		Message request = new ServiceRequestMessage(service);
 		ServiceOfferMessage response = (ServiceOfferMessage) request(request, DEFAULT_TIMEOUT);
 		return response.address;
 	}
 
+	/**
+	 * Notifies a resolver that the service is offline.
+	 *
+	 * @param service the service id
+	 * @param address the instance address
+	 * @return true, if the client should try again using the same address
+	 * @throws IOException
+	 */
 	public boolean offline(byte service, InetSocketAddress address) throws IOException {
 		return ((ServiceThanksMessage) request(new ServiceOfflineMessage(service, address), DEFAULT_TIMEOUT * 5)).retry;
 	}
 
+	/**
+	 * Requests list synchronization from another resolver.
+	 *
+	 * @return the instance list
+	 * @throws IOException
+	 */
 	public List<ListAddMessage> sync() throws IOException {
 		Message response = request(SimpleMessage.ofType(MessageType.LIST_SYNC_REQUEST), DEFAULT_TIMEOUT);
 		List<ListAddMessage> instances = new ArrayList<>();
