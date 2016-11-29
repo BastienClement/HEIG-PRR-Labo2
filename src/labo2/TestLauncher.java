@@ -1,8 +1,6 @@
 package labo2;
 
-import labo2.client.FailOverTest;
-import labo2.client.RoundRobinTest;
-import labo2.client.TestClient;
+import labo2.client.*;
 import labo2.resolver.Resolver;
 import labo2.services.Echo;
 import labo2.services.Time;
@@ -21,9 +19,12 @@ public class TestLauncher {
 	/**
 	 * Tests to run
 	 */
-	private static TestConstructor[] tests = new TestConstructor[]{
+	private static TestConstructor[] tests = new TestConstructor[] {
+		EchoTest::new,
+		TimeTest::new,
 		RoundRobinTest::new,
-		FailOverTest::new
+		FailOverTest::new,
+		ResolverRecoveryTest::new
 	};
 
 	/**

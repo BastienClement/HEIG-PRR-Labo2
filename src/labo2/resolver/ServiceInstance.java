@@ -12,4 +12,14 @@ public class ServiceInstance {
 		this.address = address;
 		this.agentPort = agentPort;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || !(o instanceof ServiceInstance)) {
+			return false;
+		} else {
+			ServiceInstance other = (ServiceInstance) o;
+			return service == other.service && address.equals(other.address);
+		}
+	}
 }

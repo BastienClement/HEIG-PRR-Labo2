@@ -10,7 +10,7 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 
 /**
- * A simple echo service sending back the messages it receives.
+ * A simple echo service sending back messages it receives.
  */
 public class Echo extends Task<Void> {
 	public static byte SERVICE_ID = 0;
