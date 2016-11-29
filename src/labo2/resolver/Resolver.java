@@ -7,6 +7,7 @@ import labo2.utils.Task;
 import java.io.IOException;
 import java.net.*;
 import java.util.LinkedList;
+import java.util.List;
 
 import static labo2.protocol.Protocol.RESOLVERS;
 
@@ -24,7 +25,7 @@ public class Resolver extends Task<Void> {
 	/**
 	 * The UDP datagram socket use by this resolver
 	 */
-	DatagramSocket socket;
+	private DatagramSocket socket;
 
 	/**
 	 * Logger instance
@@ -32,11 +33,16 @@ public class Resolver extends Task<Void> {
 	private Logger log;
 
 	/**
-	 * Lists of services
+	 * Lists of services instances
 	 */
 	@SuppressWarnings("unchecked")
 	private LinkedList<ServiceInstance>[] services = (LinkedList<ServiceInstance>[]) new LinkedList[Protocol.SERVICES_COUNT];
 
+	/**
+	 * Constructs a new Resolver instance.
+	 *
+	 * @param id the pre-defined configuration index of this resolver
+	 */
 	private Resolver(int id) {
 		this.id = id;
 		this.log = Logger.getLogger("resolver:" + id);
@@ -46,9 +52,24 @@ public class Resolver extends Task<Void> {
 		}
 	}
 
+	/**
+	 * Main process loop.
+	 *
+	 * @throws IOException
+	 */
 	protected void run() throws IOException {
+		// Initialize instances list from another resolver
+		init();
+
+		// Open resolver socket
 		socket = new DatagramSocket(RESOLVERS[id]);
 		log.printf("Listening on %s:%d\n", socket.getLocalAddress(), socket.getLocalPort());
+
+		// Set the resolver as ready
+		state = State.READY;
+		ready();
+
+		// Main loop
 		byte[] buffer = new byte[512];
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		try {
@@ -62,6 +83,25 @@ public class Resolver extends Task<Void> {
 		}
 	}
 
+	/**
+	 * Initializes this resolver by loading the services list from another resolver.
+	 */
+	private void init() throws IOException {
+		try (ResolverClient client = ResolverClient.withNewSocket().withLogger(log)) {
+			List<ListAddMessage> instances = client.sync();
+			log.printf("Received %d services\n", instances.size());
+			for (ListAddMessage add : instances) {
+				registerService(new ServiceInstance(add.service, add.address, add.agentPort));
+			}
+		} catch (ResolverClientException ignored) {
+			log.println("No resolver available, starting with an empty directory...");
+			// Ignore ResolverClientException, just start with an empty list
+		}
+	}
+
+	/**
+	 * Stops this resolver.
+	 */
 	protected void interrupt() {
 		socket.close();
 		log.println("Resolver stopped...");
@@ -73,6 +113,9 @@ public class Resolver extends Task<Void> {
 	 * @param instance the service instance
 	 */
 	private void registerService(ServiceInstance instance) {
+		for (ServiceInstance i : services[instance.service]) {
+			if (i.equals(instance)) return;
+		}
 		services[instance.service].add(instance);
 	}
 
@@ -97,9 +140,11 @@ public class Resolver extends Task<Void> {
 				log.printf("Received service offer for [%d] from %s:%d (agent:%d)\n",
 					msg.service, packet.getAddress(), packet.getPort(), msg.agentPort);
 
-				ServiceInstance instance = new ServiceInstance(msg.service, packet.getAddress(), packet.getPort(), msg.agentPort);
+				InetSocketAddress address = new InetSocketAddress(packet.getAddress(), packet.getPort());
+				ServiceInstance instance = new ServiceInstance(msg.service, address, msg.agentPort);
 				registerService(instance);
 
+				broadcast(new ListAddMessage(instance.service, instance.address, instance.agentPort));
 				send(SimpleMessage.ofType(MessageType.SERVICE_REGISTERED), packet);
 				break;
 			}
@@ -111,8 +156,26 @@ public class Resolver extends Task<Void> {
 				ServiceInstance instance = requestService(msg.service);
 				send(new ServiceOfferMessage(
 					instance != null,
-					instance != null ? new InetSocketAddress(instance.address, instance.port) : null
+					instance != null ? instance.address : null
 				), packet);
+				break;
+			}
+
+			case LIST_SYNC_REQUEST: {
+				log.printf("Received sync request from %s\n", packet.getSocketAddress());
+				for (LinkedList<ServiceInstance> serviceInstances : services) {
+					for (ServiceInstance instance : serviceInstances) {
+						send(new ListAddMessage(instance.service, instance.address, instance.agentPort), packet);
+					}
+				}
+				send(SimpleMessage.ofType(MessageType.LIST_SYNC_COMMIT), packet);
+				break;
+			}
+
+			case LIST_ADD: {
+				ListAddMessage msg = (ListAddMessage) message;
+				log.printf("Received list add notification from %s\n", packet.getSocketAddress());
+				registerService(new ServiceInstance(msg.service, msg.address, msg.agentPort));
 				break;
 			}
 

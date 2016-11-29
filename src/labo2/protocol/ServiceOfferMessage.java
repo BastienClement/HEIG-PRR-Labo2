@@ -3,7 +3,6 @@ package labo2.protocol;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
 public class ServiceOfferMessage extends Message {
@@ -20,18 +19,15 @@ public class ServiceOfferMessage extends Message {
 	void serialize(DataOutputStream output) throws IOException {
 		output.writeBoolean(available);
 		if (available) {
-			output.write(address.getAddress().getAddress());
-			output.writeInt(address.getPort());
+			SharedEncoders.serializeSocketAddress(output, address);
 		}
 	}
 
 	static ServiceOfferMessage deserialize(DataInputStream input) throws IOException {
 		boolean available = input.readBoolean();
 		if (available) {
-			byte[] address = new byte[4];
-			input.read(address);
-			int port = input.readInt();
-			return new ServiceOfferMessage(true, new InetSocketAddress(InetAddress.getByAddress(address), port));
+			InetSocketAddress address = SharedEncoders.unserializeSocketAddress(input);
+			return new ServiceOfferMessage(true, address);
 		} else {
 			return new ServiceOfferMessage(false, null);
 		}

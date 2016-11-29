@@ -13,10 +13,10 @@ public enum MessageType {
 	SERVICE_PONG(null),
 
 	// Private Resolver API
-	LIST_REQUEST(null),
-	LIST_ADD(null),
-	LIST_REMOVE(null),
-	LIST_SYNC(null);
+	LIST_SYNC_REQUEST(null),
+	LIST_SYNC_COMMIT(null),
+	LIST_ADD(ListAddMessage::deserialize),
+	LIST_REMOVE(ListRemoveMessage::deserialize);
 
 	/**
 	 * The deserializer associated with this message type.

@@ -4,6 +4,8 @@ import labo2.utils.Logger;
 
 import java.io.IOException;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static labo2.protocol.Protocol.RESOLVERS;
 
@@ -46,7 +48,10 @@ public class ResolverClient implements AutoCloseable {
 			packet.setAddress(resolver.getAddress());
 			packet.setPort(resolver.getPort());
 			packet.setData(data);
-			if (logger != null) logger.printf("Sending %s to %s\n", message.getClass().getSimpleName(), resolver);
+			if (logger != null) {
+				String name = (message instanceof SimpleMessage) ? message.toString() : message.getClass().getSimpleName();
+				logger.printf("Sending %s to %s\n", name, resolver);
+			}
 			socket.send(packet);
 			Message response = receive();
 			if (response == null) {
@@ -59,7 +64,7 @@ public class ResolverClient implements AutoCloseable {
 		throw new ResolverClientException("No resolvers available");
 	}
 
-	public Message receive() throws IOException {
+	private Message receive() throws IOException {
 		int origSoTimeout = socket.getSoTimeout();
 		try {
 			socket.setSoTimeout(DEFAULT_TIMEOUT);
@@ -85,8 +90,18 @@ public class ResolverClient implements AutoCloseable {
 		return response.address;
 	}
 
-	public void sync() throws IOException {
-
+	public List<ListAddMessage> sync() throws IOException {
+		Message response = request(SimpleMessage.ofType(MessageType.LIST_SYNC_REQUEST));
+		List<ListAddMessage> instances = new ArrayList<>();
+		while (response.type() != MessageType.LIST_SYNC_COMMIT) {
+			if (response.type() == MessageType.LIST_ADD) {
+				instances.add((ListAddMessage) response);
+				response = receive();
+				if (response != null) continue;
+			}
+			throw new IllegalStateException();
+		}
+		return instances;
 	}
 
 	public void close() {

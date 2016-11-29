@@ -13,9 +13,13 @@ public class FailOverTest extends TestClient {
 		InetSocketAddress first = client.resolve(Time.SERVICE_ID);
 		log.printf("first = %s\n", first);
 		ctx.stopResolver(0);
+
 		InetSocketAddress second = client.resolve(Time.SERVICE_ID);
 		log.printf("second = %s\n", second);
-		require(first.equals(second));
+		InetSocketAddress third = client.resolve(Time.SERVICE_ID);
+		log.printf("third = %s\n", third);
+
+		require(first.equals(second) || first.equals(third));
 		ctx.startResolver(0);
 	}
 }

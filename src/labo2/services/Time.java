@@ -32,6 +32,7 @@ public class Time extends Task<Void> {
 		byte[] buffer = new byte[8];
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 		log.println("Time service ready");
+		ready();
 		try {
 			while (true) {
 				socket.receive(packet);

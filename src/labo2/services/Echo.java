@@ -30,6 +30,7 @@ public class Echo extends Task<Void> {
 		log = Logger.getLogger(name);
 		DatagramPacket packet = new DatagramPacket(new byte[512], 512);
 		log.println("Echo service ready");
+		ready();
 		try {
 			while (true) {
 				socket.receive(packet);
