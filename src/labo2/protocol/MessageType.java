@@ -3,6 +3,13 @@ package labo2.protocol;
 import java.io.DataInputStream;
 import java.io.IOException;
 
+/**
+ * Represents all the message types used in our communications
+ * <p>
+ * This class is mostly used to determine the receipt messages type and so is responsible for chosing response actions
+ * Every type corresponds to a particulary deserializer which is used to deserialize the message
+ * If the type has no deserializer, it is considerated as a SimpleMessage
+ */
 public enum MessageType {
 	// Public Resolver API
 	SERVICE_REGISTER(ServiceRegisterMessage::deserialize),

@@ -7,6 +7,14 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 
+/**
+ * A agent class for the Resolver API.
+ * <p>
+ * This agent receive the service socket and create a new one for the agent with the same address.
+ * The agent socket is first used to register.
+ * Then it is use to listen for ping request (listener).
+ * So we can determine if the agent is running.
+ */
 public class ResolverAgent {
 	private Logger log;
 	private DatagramSocket serviceSocket;

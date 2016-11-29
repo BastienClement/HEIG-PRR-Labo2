@@ -5,6 +5,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+/**
+ * A message used to remove a service
+ * <p>
+ * This message is used to unregister the given service.
+ */
 public class ListRemoveMessage extends Message {
 	public MessageType type() { return MessageType.LIST_REMOVE; }
 

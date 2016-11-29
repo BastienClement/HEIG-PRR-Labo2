@@ -5,6 +5,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
+
+/**
+ * A message used to add a service
+ * <p>
+ * This message is used to register the given service.
+ */
 public class ListAddMessage extends Message {
 	public MessageType type() { return MessageType.LIST_ADD; }
 

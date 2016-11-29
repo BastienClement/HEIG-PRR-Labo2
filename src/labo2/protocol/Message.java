@@ -2,6 +2,12 @@ package labo2.protocol;
 
 import java.io.*;
 
+/**
+ * An abstract message reprenting a generic message
+ * <p>
+ * This class is used to send and receive message. It offers the possibilities to serialize a message to
+ * byte[] (serialize) and to parse byte[] to Message (parse)
+ */
 public abstract class Message {
 	public abstract MessageType type();
 	abstract void serialize(DataOutputStream output) throws IOException;

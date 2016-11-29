@@ -3,6 +3,12 @@ package labo2.protocol;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+/**
+ * A simple message
+ * <p>
+ * This message is used for creating receipts and so do not have real content.
+ */
+
 public class SimpleMessage extends Message {
 	private static SimpleMessage[] INSTANCES = null;
 
